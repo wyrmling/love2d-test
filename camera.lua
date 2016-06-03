@@ -8,8 +8,6 @@ camera.rotation = 0
 function camera:set()
     love.graphics.push()
 
---    love.graphics.
-
     love.graphics.rotate(-self.rotation)
     love.graphics.scale(1 / self.scaleX, 1 / self.scaleY)
     love.graphics.translate(-self.x, -self.y)
@@ -41,6 +39,13 @@ end
 
 function camera:scale(sx, sy)
     sx = sx or 1
+
+    -- запомнить текущую точку курсора (до масштабирования)
+    -- сдвинуть текущий центр в эту точку:
+    -- узнать центр нового экрана, и разницу между этими двумя точками
+    -- TODO: перенести сюда из мэйна
+
+
     self.scaleX = self.scaleX * sx
     self.scaleY = self.scaleY * (sy or sx)
 end

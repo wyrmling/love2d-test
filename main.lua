@@ -1,22 +1,19 @@
---string = "Some word"
 graph = love.graphics
 kb = love.keyboard
 require('camera')
-rocket = {
-    x=0,
-    y=0,
+require('vector')
+rocket_defualt = {
+    x=1600,
+    y=200,
     speed = {
         x=0,
         y=0,
     }
 }
+local rocket
 
 --debug.debug()
 
-
---local function myStencilFunction()
---    kb.rectangle("fill", 225, 200, 350, 300)
---end
 
 local mouse = {pressed = {} }
 
@@ -36,6 +33,8 @@ local planets = {
 function love.load()
     kb.setKeyRepeat(true)
     local mouseX = null
+    rocket = vector:new(rocket_defualt.x, rocket_defualt.y)
+    rocket.speed = 5
 --    camera = {scale = 1}
 end
 
@@ -43,69 +42,45 @@ function love.update(dt)
     if kb.isDown('t') then
         print('t pressed')
     end
---    test.x = test.x*dt+100
---    test.y = test.y*dt+100
-    mx, my = camera:mousePosition()
-    if mx > rocket.x then
-        rocket.x = rocket.x+5
-    else
-        rocket.x = rocket.x-5
-    end
-    if my > rocket.y then
-        rocket.y = rocket.y+5
-    else
-        rocket.y = rocket.y-5
-    end
+
+    rocket:setAngle(rocket.angle + 1)
+--    local dX, dY = rocket:getVector()
+--    rocket.x = rocket.x + dX
+--    rocket.y = rocket.y + dY
 end
 
 function love.draw()
 --    graph.scale(camera.scale, camera.scale)   -- reduce everything by 50% in both X and Y coordinates
     local major, minor, revision, codename = love.getVersion()
     local str = string.format("Version %d.%d.%d - %s", major, minor, revision, codename)
+    local camX, camY = camera:mousePosition()
     graph.print(str, 20, 20)
     graph.print('FPS: '..love.timer.getFPS(), 10, 50)
     graph.print('x pressed: ' .. tostring(mouseX), 20, 70)
     graph.print('x: ' .. tostring(love.mouse.getX()), 20, 80)
+    graph.print('real x: ' .. camX .. ' y: ' .. camY, 20, 90)
+    graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 100)
+    graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 110)
 
+local width = love.graphics.getWidth()/2
+local height = love.graphics.getHeight()/2
+--local width = love.graphics.getWidth()/1.5
+--local height = love.graphics.getHeight()/1.5
+graph.setColor(255, 255, 0)
+graph.circle('fill', width, height, 10, 100)
+love.graphics.rectangle( 'fill', 0, 0, width, height )
 
     camera:set()
 
     rocket_draw()
 
-
-
 --debug.debug()
-
---    local touches = love.touch.getTouches()
---    for i, id in ipairs(touches) do
---        local x, y = love.touch.getPosition(id)
---        love.graphics.circle("fill", x, y, 20)
---    end
-
---    print('test')
---    love.window.setTitle('rpg-test')
---    -- draw a rectangle as a stencil. Each pixel touched by the rectangle will have its stencil value set to 1. The rest will be 0.
---    love.graphics.stencil(myStencilFunction, "replace", 1)
---
---    -- Only allow rendering on pixels which have a stencil value greater than 0.
---    love.graphics.setStencilTest("greater", 0)
---
---    graph.setColor(255, 0, 0, 120)
---    graph.circle("fill", 0, 0, 150, 50)
---
---    love.graphics.setColor(0, 255, 0, 120)
---    love.graphics.circle("fill", 500, 300, 150, 50)
---
---    love.graphics.setColor(0, 0, 255, 120)
---    love.graphics.circle("fill", 400, 400, 150, 50)
---
---    love.graphics.setStencilTest()
 
     local distance = 0
     for key, planet in pairs(planets) do
 --        print(unpack(planet.color))
-        r, g, b = unpack(planet.color)
-        radius = planet.r / 500
+        local r, g, b = unpack(planet.color)
+        local radius = planet.r / 500
         if distance ~= 0 then distance = distance + radius + 100 end
         graph.setColor(r*255,g*255,b*255, 120)
         graph.circle('fill', distance, 0, radius, 100)
@@ -121,12 +96,11 @@ function love.draw()
         print('cam mouse pos: ', camera:mousePosition())
         print('pressed: ', x_pr, y_pr)
         print('')
-        local cur_x, cur_y = camera:mousePosition()
-        camera.x, camera.y = camera.x - cur_x + mouse.pressed.x, camera.y - cur_y + mouse.pressed.y
+        local curMouseX, curMouseY = camera:mousePosition()
+        camera:move(-curMouseX + mouse.pressed.x, -curMouseY + mouse.pressed.y)
     end
 
 
-    camX, camY = camera:mousePosition()
 --    print(camera:mousePosition())
     graph.setColor(255, 0, 0)
     graph.circle('fill', camX, camY, 50, 100)
@@ -137,23 +111,39 @@ function love.draw()
 end
 
 function rocket_draw()
+    local mx, my = camera:mousePosition()
     graph.setColor(0,0,255, 120)
     graph.circle('fill', rocket.x, rocket.y, 100, 100)
-    --    mx,my = camera:mousePosition()
     graph.line(rocket.x, rocket.y, camera:mousePosition())
 end
 
 function rocket_move(dt)
-    rocket.x = rocket.x + rocket.xvel
-    rocket.xvel = rocket.xvel * (1 - math.min(dt * rocket.friction, 1))
+--    rocket.x = rocket.x + rocket.xvel
+--    rocket.xvel = rocket.xvel * (1 - math.min(dt * rocket.friction, 1))
 end
 
 function love.keypressed(key, scancode, isrepeat)
     print(key, scancode, isrepeat)
     if key == 'w' then
-        camera:scale(0.5)
+        local oldScaleX = camera.scaleX
+        local oldScaleY = camera.scaleY
+        camera:scale(1/1.5)
+        local newScaleX = camera.scaleX
+        local newScaleY = camera.scaleY
+
+        -- screen center
+        local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
+        local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
+
+        -- mouse center
+--        local cur_x, cur_y = camera:mousePosition()
+--        local width = (love.graphics.getWidth()*oldScaleX - cur_x)/2
+--        local height = (love.graphics.getHeight()*oldScaleY - cur_y)/2
+
+        camera:move(width, height)
+
     elseif key == 's' then
-        camera:scale(2)
+        camera:scale(1.5)
     elseif key == 'escape' then
         love.event.quit()
     end
@@ -161,9 +151,25 @@ end
 
 function love.wheelmoved(x, y)
     if y > 0 then
+        local oldScaleX = camera.scaleX
+        local oldScaleY = camera.scaleY
         camera:scale(10/15)
+        local newScaleX = camera.scaleX
+        local newScaleY = camera.scaleY
+        -- screen center
+        local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
+        local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
+        camera:move(width, height)
     elseif y < 0 then
+        local oldScaleX = camera.scaleX
+        local oldScaleY = camera.scaleY
         camera:scale(15/10)
+        local newScaleX = camera.scaleX
+        local newScaleY = camera.scaleY
+        -- screen center
+        local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
+        local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
+        camera:move(width, height)
     end
 end
 
