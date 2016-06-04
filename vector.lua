@@ -28,8 +28,22 @@ function vector:getVector()
 end
 
 function vector:setAngle(angle)
+    if angle > 360 then
+        angle = angle - 360
+    elseif angle < -360 then
+        angle = angle + 360
+    end
     self.angle = angle
+end
+
+function vector:drawVector()
+    -- tan(a) =
+    local x = math.cos(math.rad(self.angle)) * self.speed * 100
+    local y = math.sin(math.rad(self.angle)) * self.speed * 100
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.line(self.x, self.y, self.x + x, self.y + y)
+    graph.print('coord: ' .. x .. ' | ' .. y, self.x, self.y+70, 0, 2, 2)
+
     self.x = self.x + math.cos(math.rad(self.angle)) * self.speed
     self.y = self.y + math.sin(math.rad(self.angle)) * self.speed
-    return self.x, self.y
 end

@@ -39,14 +39,11 @@ function love.load()
 end
 
 function love.update(dt)
-    if kb.isDown('t') then
-        print('t pressed')
+    if kb.isDown('left') then
+        rocket:setAngle(rocket.angle - 1)
+    elseif kb.isDown('right') then
+        rocket:setAngle(rocket.angle + 1)
     end
-
-    rocket:setAngle(rocket.angle + 1)
---    local dX, dY = rocket:getVector()
---    rocket.x = rocket.x + dX
---    rocket.y = rocket.y + dY
 end
 
 function love.draw()
@@ -62,13 +59,13 @@ function love.draw()
     graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 100)
     graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 110)
 
-local width = love.graphics.getWidth()/2
-local height = love.graphics.getHeight()/2
---local width = love.graphics.getWidth()/1.5
---local height = love.graphics.getHeight()/1.5
-graph.setColor(255, 255, 0)
-graph.circle('fill', width, height, 10, 100)
-love.graphics.rectangle( 'fill', 0, 0, width, height )
+--local width = love.graphics.getWidth()/2
+--local height = love.graphics.getHeight()/2
+----local width = love.graphics.getWidth()/1.5
+----local height = love.graphics.getHeight()/1.5
+--graph.setColor(255, 255, 0)
+--graph.circle('fill', width, height, 10, 100)
+--love.graphics.rectangle( 'fill', 0, 0, width, height )
 
     camera:set()
 
@@ -114,7 +111,12 @@ function rocket_draw()
     local mx, my = camera:mousePosition()
     graph.setColor(0,0,255, 120)
     graph.circle('fill', rocket.x, rocket.y, 100, 100)
+    graph.setColor(255,255,255, 120)
+    graph.print('rocket', rocket.x, rocket.y+10, 0, 2, 2)
+    graph.print('spd: ' .. rocket.speed, rocket.x, rocket.y+30, 0, 2, 2)
+    graph.print('angle: ' .. rocket.angle, rocket.x, rocket.y+50, 0, 2, 2)
     graph.line(rocket.x, rocket.y, camera:mousePosition())
+    rocket:drawVector()
 end
 
 function rocket_move(dt)
@@ -122,6 +124,7 @@ function rocket_move(dt)
 --    rocket.xvel = rocket.xvel * (1 - math.min(dt * rocket.friction, 1))
 end
 
+-- работает не плавно, kb.isDown из update работает плавнее
 function love.keypressed(key, scancode, isrepeat)
     print(key, scancode, isrepeat)
     if key == 'w' then
@@ -144,6 +147,10 @@ function love.keypressed(key, scancode, isrepeat)
 
     elseif key == 's' then
         camera:scale(1.5)
+--    elseif key == 'left' then
+--        rocket:setAngle(rocket.angle - 1)
+--    elseif key == 'right' then
+--        rocket:setAngle(rocket.angle + 1)
     elseif key == 'escape' then
         love.event.quit()
     end
