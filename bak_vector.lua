@@ -2,16 +2,25 @@
 
 vector = {}
 
-function vector:new(x, y, angle, magnitude)
+function vector:new(x, y, angle, speed, accel)
     local newObj = {
         x = x or 0,
         y = y or 0,
         angle = angle or 0,
-        magnitude = magnitude or 0,
+        speed = speed or 0,
+        accel = accel or 0,
     }
     self.__index = self
     return setmetatable(newObj, self)
 end
+
+--function vector:setSpeed(speed)
+--    self.speed = speed
+--end
+--
+--function vector:getSpeed()
+--    return self.speed
+--end
 
 function vector:getVector()
     local x = math.cos(math.rad(self.angle)) * self.speed
@@ -28,15 +37,14 @@ function vector:setAngle(angle)
     self.angle = angle
 end
 
-function vector:drawDebug()
+function vector:drawVector()
+    -- tan(a) =
     local x = math.cos(math.rad(self.angle)) * self.speed * 100
     local y = math.sin(math.rad(self.angle)) * self.speed * 100
     love.graphics.setColor(255, 255, 255)
     love.graphics.line(self.x, self.y, self.x + x, self.y + y)
     graph.print('coord: ' .. x .. ' | ' .. y, self.x, self.y+70, 0, 2, 2)
-end
 
-function vector:drawVector()
     self.speed = self.speed + self.accel
 
     self.x = self.x + math.cos(math.rad(self.angle)) * self.speed

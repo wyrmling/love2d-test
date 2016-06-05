@@ -2,6 +2,7 @@ graph = love.graphics
 kb = love.keyboard
 require('camera')
 require('vector')
+require('object')
 rocket_defualt = {
     x=1600,
     y=200,
@@ -11,6 +12,9 @@ rocket_defualt = {
     }
 }
 local rocket
+
+local rotate_rate = 70
+local accel_rate = 10
 
 --debug.debug()
 
@@ -33,17 +37,27 @@ local planets = {
 function love.load()
     kb.setKeyRepeat(true)
     local mouseX = null
-    rocket = vector:new(rocket_defualt.x, rocket_defualt.y)
-    rocket.speed = 5
+    rocket = object:new(rocket_defualt.x, rocket_defualt.y)
+    rocket.speed = 0
 --    camera = {scale = 1}
 end
 
+-- dt - 1/x часть секунды, в которую происходит обработка
 function love.update(dt)
     if kb.isDown('left') then
-        rocket:setAngle(rocket.angle - 1)
-    elseif kb.isDown('right') then
-        rocket:setAngle(rocket.angle + 1)
+        rocket:setAngle(rocket.angle - rotate_rate * dt)
     end
+    if kb.isDown('right') then
+        rocket:setAngle(rocket.angle + rotate_rate * dt)
+    end
+    if kb.isDown('up') then
+        rocket.accel = accel_rate * dt
+--    end
+    elseif kb.isDown('down') then
+        rocket.accel = -accel_rate * dt
+    end
+
+    rocket:updateObject()
 end
 
 function love.draw()
@@ -53,11 +67,12 @@ function love.draw()
     local camX, camY = camera:mousePosition()
     graph.print(str, 20, 20)
     graph.print('FPS: '..love.timer.getFPS(), 10, 50)
-    graph.print('x pressed: ' .. tostring(mouseX), 20, 70)
-    graph.print('x: ' .. tostring(love.mouse.getX()), 20, 80)
-    graph.print('real x: ' .. camX .. ' y: ' .. camY, 20, 90)
-    graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 100)
-    graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 110)
+    graph.print('x: ' .. tostring(love.mouse.getX()), 20, 70)
+    graph.print('real x: ' .. camX .. ' y: ' .. camY, 20, 80)
+    graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 90)
+    graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 100)
+    graph.print('speed: ' .. rocket.speed, 20, 110)
+    graph.print('accel: ' .. rocket.accel, 20, 120)
 
 --local width = love.graphics.getWidth()/2
 --local height = love.graphics.getHeight()/2
@@ -116,7 +131,7 @@ function rocket_draw()
     graph.print('spd: ' .. rocket.speed, rocket.x, rocket.y+30, 0, 2, 2)
     graph.print('angle: ' .. rocket.angle, rocket.x, rocket.y+50, 0, 2, 2)
     graph.line(rocket.x, rocket.y, camera:mousePosition())
-    rocket:drawVector()
+    rocket:drawDebug()
 end
 
 function rocket_move(dt)
@@ -151,8 +166,17 @@ function love.keypressed(key, scancode, isrepeat)
 --        rocket:setAngle(rocket.angle - 1)
 --    elseif key == 'right' then
 --        rocket:setAngle(rocket.angle + 1)
-    elseif key == 'escape' then
+    end
+    if key == 'escape' then
         love.event.quit()
+    end
+end
+
+function love.keyreleased(key)
+    if key == 'up' then
+        rocket.accel = 0
+    elseif key == 'down' then
+        rocket.accel = 0
     end
 end
 
