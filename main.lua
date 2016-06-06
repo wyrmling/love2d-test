@@ -3,7 +3,7 @@ kb = love.keyboard
 require('camera')
 require('vector')
 require('object')
-rocket_defualt = {
+rocket_default = {
     x=1600,
     y=200,
     speed = {
@@ -11,10 +11,10 @@ rocket_defualt = {
         y=0,
     }
 }
-local rocket
+--local rocket
 
 local rotate_rate = 70
-local accel_rate = 10
+local accel_rate = 0.5
 
 --debug.debug()
 
@@ -36,25 +36,24 @@ local planets = {
 
 function love.load()
     kb.setKeyRepeat(true)
-    local mouseX = null
-    rocket = object:new(rocket_defualt.x, rocket_defualt.y)
-    rocket.speed = 0
+    camera:move(1100, -185)
+    rocket = object:new(rocket_default.x, rocket_default.y)
 --    camera = {scale = 1}
 end
 
 -- dt - 1/x часть секунды, в которую происходит обработка
 function love.update(dt)
     if kb.isDown('left') then
-        rocket:setAngle(rocket.angle - rotate_rate * dt)
+        rocket:addAngle(-rotate_rate * dt)
     end
     if kb.isDown('right') then
-        rocket:setAngle(rocket.angle + rotate_rate * dt)
+        rocket:addAngle(rotate_rate * dt)
     end
     if kb.isDown('up') then
-        rocket.accel = accel_rate * dt
---    end
-    elseif kb.isDown('down') then
-        rocket.accel = -accel_rate * dt
+        rocket.accel_vector.magnitude = accel_rate
+    end
+    if kb.isDown('down') then
+        rocket.accel_vector.magnitude = -accel_rate
     end
 
     rocket:updateObject()
@@ -71,8 +70,14 @@ function love.draw()
     graph.print('real x: ' .. camX .. ' y: ' .. camY, 20, 80)
     graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 90)
     graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 100)
-    graph.print('speed: ' .. rocket.speed, 20, 110)
-    graph.print('accel: ' .. rocket.accel, 20, 120)
+    graph.print('speed: L ' .. rocket.speed_vector.magnitude .. ' A ' .. rocket.speed_vector.angle, 20, 110)
+    graph.print('accel: L ' .. rocket.accel_vector.magnitude .. ' A ' .. rocket.accel_vector.angle, 20, 120)
+
+    aX, aY = rocket.speed_vector:getVector()
+    bX, bY = rocket.accel_vector:getVector()
+    xyFin = { aX + bX, aY + bY }
+    graph.print(' ' .. xyFin[1] .. '  ' .. xyFin[2], 20, 140)
+
 
 --local width = love.graphics.getWidth()/2
 --local height = love.graphics.getHeight()/2
@@ -128,7 +133,7 @@ function rocket_draw()
     graph.circle('fill', rocket.x, rocket.y, 100, 100)
     graph.setColor(255,255,255, 120)
     graph.print('rocket', rocket.x, rocket.y+10, 0, 2, 2)
-    graph.print('spd: ' .. rocket.speed, rocket.x, rocket.y+30, 0, 2, 2)
+    graph.print('spd: ' .. rocket.speed_vector.magnitude, rocket.x, rocket.y+30, 0, 2, 2)
     graph.print('angle: ' .. rocket.angle, rocket.x, rocket.y+50, 0, 2, 2)
     graph.line(rocket.x, rocket.y, camera:mousePosition())
     rocket:drawDebug()
@@ -174,9 +179,9 @@ end
 
 function love.keyreleased(key)
     if key == 'up' then
-        rocket.accel = 0
+        rocket.accel_vector.magnitude = 0
     elseif key == 'down' then
-        rocket.accel = 0
+        rocket.accel_vector.magnitude = 0
     end
 end
 
