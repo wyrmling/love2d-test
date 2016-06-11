@@ -30,8 +30,8 @@ end
 --    self.y = self.y + math.sin(math.rad(self.angle)) * self.speed
 --end
 
-function vector:__add(a, b)
-    aX, aY = a:getVector()
-    bX, bY = b:getVector()
+function vector.__add(a, b)
+    local aX, aY = a:getVector()
+    local bX, bY = b:getVector()
     return { aX + bX, aY + bY }
 end

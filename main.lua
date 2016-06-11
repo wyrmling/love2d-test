@@ -13,7 +13,7 @@ rocket_default = {
 }
 --local rocket
 
-local rotate_rate = 70
+local rotate_rate = 150
 local accel_rate = 0.5
 
 --debug.debug()
@@ -35,6 +35,7 @@ local planets = {
 
 
 function love.load()
+--    love.window.setMode(320, 240, {resizable=true, vsync=false, minwidth=40, minheight=30, fullscreen = true})
     kb.setKeyRepeat(true)
     camera:move(1100, -185)
     rocket = object:new(rocket_default.x, rocket_default.y)
@@ -56,6 +57,10 @@ function love.update(dt)
         rocket.accel_vector.magnitude = -accel_rate
     end
 
+    if kb.isDown('space') then
+        camera:move(rocket.x, rocket.y)
+    end
+
     rocket:updateObject()
 end
 
@@ -73,10 +78,10 @@ function love.draw()
     graph.print('speed: L ' .. rocket.speed_vector.magnitude .. ' A ' .. rocket.speed_vector.angle, 20, 110)
     graph.print('accel: L ' .. rocket.accel_vector.magnitude .. ' A ' .. rocket.accel_vector.angle, 20, 120)
 
-    aX, aY = rocket.speed_vector:getVector()
-    bX, bY = rocket.accel_vector:getVector()
-    xyFin = { aX + bX, aY + bY }
-    graph.print(' ' .. xyFin[1] .. '  ' .. xyFin[2], 20, 140)
+--    aX, aY = rocket.speed_vector:getVector()
+--    bX, bY = rocket.accel_vector:getVector()
+--    xyFin = { aX + bX, aY + bY }
+--    graph.print(' ' .. xyFin[1] .. '  ' .. xyFin[2], 20, 140)
 
 
 --local width = love.graphics.getWidth()/2
@@ -89,7 +94,12 @@ function love.draw()
 
     camera:set()
 
-    rocket_draw()
+    -- camera fixed to object
+    camera:move(rocket.speed_vector.x, rocket.speed_vector.y)
+
+    -- rocket draw
+    rocket:draw()
+    rocket:drawDebug()
 
 --debug.debug()
 
@@ -125,18 +135,6 @@ function love.draw()
     graph.circle('fill', camX, camY, 10, 100)
 
     camera:unset()
-end
-
-function rocket_draw()
-    local mx, my = camera:mousePosition()
-    graph.setColor(0,0,255, 120)
-    graph.circle('fill', rocket.x, rocket.y, 100, 100)
-    graph.setColor(255,255,255, 120)
-    graph.print('rocket', rocket.x, rocket.y+10, 0, 2, 2)
-    graph.print('spd: ' .. rocket.speed_vector.magnitude, rocket.x, rocket.y+30, 0, 2, 2)
-    graph.print('angle: ' .. rocket.angle, rocket.x, rocket.y+50, 0, 2, 2)
-    graph.line(rocket.x, rocket.y, camera:mousePosition())
-    rocket:drawDebug()
 end
 
 function rocket_move(dt)

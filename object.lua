@@ -3,6 +3,18 @@
 require('vector')
 object = {}
 
+--[[
+    rotate_angle
+
+    speed:angle (установка, отладка)
+    speed:magnitude (установка, отладка)
+    speed:x,y (вычисление, отладка)
+
+    accel:angle (установка)
+    accel:magnitude (установка, отладка)
+    accel:x,y (вычисление, отладка)
+--]]
+
 function object:new(x, y, angle, speed, accel)
     local newObj = {
         x = x or 0,
@@ -50,20 +62,42 @@ function object:drawDebugVector(vector, r, g, b)
 end
 
 function object:drawDebug()
-    self:drawDebugVector(self.speed_vector, 255, 255, 255)
+    -- speed ?
+    -- не меняется пока что
+--    self:drawDebugVector(self.speed_vector, 255, 255, 255)
+
+    -- accel
+    love.graphics.setLineWidth(10)
     self:drawDebugVector(self.accel_vector, 255, 255, 0)
-    love.graphics.line(self.x, self.y, self.x + self.speed_vector.x, self.y + self.speed_vector.y)
+
+    -- real speed vector
+    love.graphics.setLineWidth(1)
+    love.graphics.line(self.x, self.y, self.x + self.speed_vector.x * 10, self.y + self.speed_vector.y * 10)
+
+    -- direction of object
     self:drawDebugVector(vector:new(0,0,self.angle,1), 255, 0, 0)
+end
+
+function object:draw()
+    local mx, my = camera:mousePosition()
+    love.graphics.setColor(0,0,255, 120)
+    love.graphics.circle('fill', rocket.x, rocket.y, 100, 100)
+    love.graphics.setColor(255,255,255, 120)
+    love.graphics.print('rocket', rocket.x, rocket.y+10, 0, 2, 2)
+    love.graphics.print('spd: ' .. rocket.speed_vector.magnitude, rocket.x, rocket.y+30, 0, 2, 2)
+    love.graphics.print('angle: ' .. rocket.angle, rocket.x, rocket.y+50, 0, 2, 2)
+    love.graphics.line(rocket.x, rocket.y, camera:mousePosition())
 end
 
 function object:updateObject()
     -- ускорение: пересчет вектора скорости
 --    local xyFin = self.speed_vector + self.accel_vector
+--    print(xyFin[1] .. ' ' .. xyFin[2])
 --    self.speed_vector = xyFin
 
-    aX, aY = self.speed_vector:getVector()
-    bX, bY = self.accel_vector:getVector()
-    xyFin = { aX + bX, aY + bY }
+    local aX, aY = self.speed_vector:getVector()
+    local bX, bY = self.accel_vector:getVector()
+    local xyFin = { aX + bX, aY + bY }
     self.speed_vector.x = self.speed_vector.x + xyFin[1]
     self.speed_vector.y = self.speed_vector.y + xyFin[2]
 
@@ -73,4 +107,8 @@ function object:updateObject()
 
     self.x = self.x + self.speed_vector.x
     self.y = self.y + self.speed_vector.y
+end
+
+function object:stop()
+
 end
