@@ -1,7 +1,8 @@
 -- game object
 
 require('vector')
-object = {}
+require('class')
+Object = class()
 
 --[[
     rotate_angle
@@ -15,16 +16,20 @@ object = {}
     accel:x,y (вычисление, отладка)
 --]]
 
-function object:new(x, y, angle, speed, accel)
-    local newObj = {
+function Object:new(name, x, y, angle, speed, accel)
+    local params = {
+        name = name or 'object',
         x = x or 0,
         y = y or 0,
         angle = angle or 0,
         speed_vector = vector:new(),
-        accel_vector = vector:new(),
+        accel_vector = vector:new(0, 0, 0, accel),
     }
-    self.__index = self
-    return setmetatable(newObj, self)
+    params.rand_r = love.math.random() * 255
+    params.rand_g = love.math.random() * 255
+    params.rand_b = love.math.random() * 255
+
+    return object(self, params)
 end
 
 --function vector:setSpeed(speed)
@@ -41,7 +46,7 @@ end
 --    return x, y
 --end
 
-function object:addAngle(angle)
+function Object:addAngle(angle)
     self.angle = self.angle + angle
 
     if self.angle > 360 then
@@ -53,7 +58,7 @@ function object:addAngle(angle)
     self.accel_vector:setAngle(self.angle)
 end
 
-function object:drawDebugVector(vector, r, g, b)
+function Object:drawDebugVector(vector, r, g, b)
     local x = math.cos(math.rad(vector.angle)) * vector.magnitude * 100
     local y = math.sin(math.rad(vector.angle)) * vector.magnitude * 100
     love.graphics.setColor(r, g, b)
@@ -61,7 +66,7 @@ function object:drawDebugVector(vector, r, g, b)
 --    graph.print('coord: ' .. x .. ' | ' .. y, self.x, self.y + 70, 0, 2, 2)
 end
 
-function object:drawDebug()
+function Object:drawDebug()
     -- speed ?
     -- не меняется пока что
 --    self:drawDebugVector(self.speed_vector, 255, 255, 255)
@@ -76,20 +81,30 @@ function object:drawDebug()
 
     -- direction of object
     self:drawDebugVector(vector:new(0,0,self.angle,1), 255, 0, 0)
+
+    -- object data debug
+    love.graphics.print(self.name, self.x, self.y + 10, 0, 2, 2)
+    love.graphics.print('spd: ' .. self.speed_vector.magnitude, self.x, self.y + 30, 0, 2, 2)
+    love.graphics.print('angle: ' .. self.angle, self.x, self.y + 50, 0, 2, 2)
 end
 
-function object:draw()
+function Object:draw()
     local mx, my = camera:mousePosition()
     love.graphics.setColor(0,0,255, 120)
-    love.graphics.circle('fill', rocket.x, rocket.y, 100, 100)
+--    love.graphics.circle('fill', self.x, self.y, 100, 100)
+
+    if self.rand_color then
+        love.graphics.setColor(self.rand_r, self.rand_g, self.rand_b, 100)
+    end
+    love.graphics.arc('fill', self.x, self.y, 70, math.rad(self.angle)+math.pi/1.8, math.rad(self.angle)-math.pi/1.8, 2)
+--    love.graphics.arc('fill', self.x, self.y, 70, 0+math.rad(self.angle), 2*math.pi+math.rad(self.angle), math.pi)
+--    love.graphics.arc('fill', self.x, self.y, 180, math.rad(self.angle), math.pi, 3)
+
     love.graphics.setColor(255,255,255, 120)
-    love.graphics.print('rocket', rocket.x, rocket.y+10, 0, 2, 2)
-    love.graphics.print('spd: ' .. rocket.speed_vector.magnitude, rocket.x, rocket.y+30, 0, 2, 2)
-    love.graphics.print('angle: ' .. rocket.angle, rocket.x, rocket.y+50, 0, 2, 2)
-    love.graphics.line(rocket.x, rocket.y, camera:mousePosition())
+    love.graphics.line(self.x, self.y, camera:mousePosition())
 end
 
-function object:updateObject()
+function Object:updateObject()
     -- ускорение: пересчет вектора скорости
 --    local xyFin = self.speed_vector + self.accel_vector
 --    print(xyFin[1] .. ' ' .. xyFin[2])
@@ -109,6 +124,10 @@ function object:updateObject()
     self.y = self.y + self.speed_vector.y
 end
 
-function object:stop()
+function Object:stop()
 
+end
+
+function Object:test()
+    print('Object')
 end

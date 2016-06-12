@@ -3,6 +3,7 @@ kb = love.keyboard
 require('camera')
 require('vector')
 require('object')
+require('rocket')
 rocket_default = {
     x=1600,
     y=200,
@@ -12,9 +13,12 @@ rocket_default = {
     }
 }
 --local rocket
-
+local player_ship
+local rocket
+local rocket_test
 local rotate_rate = 150
 local accel_rate = 0.5
+local group = {}
 
 --debug.debug()
 
@@ -38,30 +42,40 @@ function love.load()
 --    love.window.setMode(320, 240, {resizable=true, vsync=false, minwidth=40, minheight=30, fullscreen = true})
     kb.setKeyRepeat(true)
     camera:move(1100, -185)
-    rocket = object:new(rocket_default.x, rocket_default.y)
+--    player_ship = Object:new('rocket', rocket_default.x, rocket_default.y)
+    player_ship = Rocket:new('ship', rocket_default.x, rocket_default.y)
+    player_ship.rand_color = false
+--    rocket2 = object:new('rocket2', rocket_default.x, rocket_default.y, 0, 0, 0.01)
+    rocket = Rocket:new('some rocket', rocket_default.x, rocket_default.y, 0, 0, 0.01)
+    rocket:test()
+
 --    camera = {scale = 1}
 end
 
 -- dt - 1/x часть секунды, в которую происходит обработка
 function love.update(dt)
     if kb.isDown('left') then
-        rocket:addAngle(-rotate_rate * dt)
+        player_ship:addAngle(-rotate_rate * dt)
     end
     if kb.isDown('right') then
-        rocket:addAngle(rotate_rate * dt)
+        player_ship:addAngle(rotate_rate * dt)
     end
     if kb.isDown('up') then
-        rocket.accel_vector.magnitude = accel_rate
+        player_ship.accel_vector.magnitude = accel_rate
     end
     if kb.isDown('down') then
-        rocket.accel_vector.magnitude = -accel_rate
+        player_ship.accel_vector.magnitude = -accel_rate
     end
 
     if kb.isDown('space') then
-        camera:move(rocket.x, rocket.y)
+        camera:move(player_ship.x, player_ship.y)
     end
 
-    rocket:updateObject()
+
+
+    rockets_update()
+
+--    table.insert(group, Rocket:new('rocket2', rocket_default.x, rocket_default.y, 180 * math.random(), 0, 0.01))
 end
 
 function love.draw()
@@ -75,8 +89,9 @@ function love.draw()
     graph.print('real x: ' .. camX .. ' y: ' .. camY, 20, 80)
     graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 90)
     graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 100)
-    graph.print('speed: L ' .. rocket.speed_vector.magnitude .. ' A ' .. rocket.speed_vector.angle, 20, 110)
-    graph.print('accel: L ' .. rocket.accel_vector.magnitude .. ' A ' .. rocket.accel_vector.angle, 20, 120)
+    graph.print('speed: L ' .. player_ship.speed_vector.magnitude .. ' A ' .. player_ship.speed_vector.angle, 20, 110)
+    graph.print('accel: L ' .. player_ship.accel_vector.magnitude .. ' A ' .. player_ship.accel_vector.angle, 20, 120)
+    graph.print('count: ' .. #group, 20, 130)
 
 --    aX, aY = rocket.speed_vector:getVector()
 --    bX, bY = rocket.accel_vector:getVector()
@@ -95,11 +110,10 @@ function love.draw()
     camera:set()
 
     -- camera fixed to object
-    camera:move(rocket.speed_vector.x, rocket.speed_vector.y)
+    camera:move(player_ship.speed_vector.x, player_ship.speed_vector.y)
 
     -- rocket draw
-    rocket:draw()
-    rocket:drawDebug()
+    rockets_draw()
 
 --debug.debug()
 
@@ -137,9 +151,42 @@ function love.draw()
     camera:unset()
 end
 
+-- TODO: добавить паузу!
+
 function rocket_move(dt)
 --    rocket.x = rocket.x + rocket.xvel
 --    rocket.xvel = rocket.xvel * (1 - math.min(dt * rocket.friction, 1))
+end
+
+function rockets_draw()
+    player_ship:draw()
+    player_ship:drawDebug()
+
+    rocket:draw()
+    rocket:drawDebug()
+
+    if rocket_test then
+        rocket_test:draw()
+        rocket_test:drawDebug()
+    end
+    for k, v in ipairs(group) do
+        v:draw()
+        v:drawDebug()
+    end
+end
+
+function rockets_update()
+    player_ship:updateObject()
+
+    rocket:updateObject()
+
+    if rocket_test then
+        rocket_test:updateObject()
+    end
+
+    for k, v in ipairs(group) do
+        v:updateObject()
+    end
 end
 
 -- работает не плавно, kb.isDown из update работает плавнее
@@ -170,6 +217,14 @@ function love.keypressed(key, scancode, isrepeat)
 --    elseif key == 'right' then
 --        rocket:setAngle(rocket.angle + 1)
     end
+
+    if key == '1' then
+        local angle = 360 * math.random()
+        local r = Rocket:new('rocket' .. math.random(), rocket_default.x, rocket_default.y, angle, 0, 0.01)
+        r:addAngle(angle)
+        table.insert(group, r)
+    end
+
     if key == 'escape' then
         love.event.quit()
     end
@@ -177,9 +232,9 @@ end
 
 function love.keyreleased(key)
     if key == 'up' then
-        rocket.accel_vector.magnitude = 0
+        player_ship.accel_vector.magnitude = 0
     elseif key == 'down' then
-        rocket.accel_vector.magnitude = 0
+        player_ship.accel_vector.magnitude = 0
     end
 end
 
