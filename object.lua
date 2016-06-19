@@ -104,7 +104,7 @@ function Object:draw()
     love.graphics.line(self.x, self.y, camera:mousePosition())
 end
 
-function Object:updateObject()
+function Object:updateObject(dt)
     -- ускорение: пересчет вектора скорости
 --    local xyFin = self.speed_vector + self.accel_vector
 --    print(xyFin[1] .. ' ' .. xyFin[2])
@@ -115,6 +115,8 @@ function Object:updateObject()
     local xyFin = { aX + bX, aY + bY }
     self.speed_vector.x = self.speed_vector.x + xyFin[1]
     self.speed_vector.y = self.speed_vector.y + xyFin[2]
+--    self.speed_vector.speed = math.sqrt(self.speed_vector.x * self.speed_vector.x + self.speed_vector.y * self.speed_vector.y)
+--    self.speed_vector.magnitude = self.speed_vector.magnitude + self.accel_vector.magnitude
 
     -- положение, с учетом вектора скорости
 --    self.x = self.x + math.cos(math.rad(self.speed_vector.angle)) * self.speed_vector.magnitude
@@ -122,12 +124,9 @@ function Object:updateObject()
 
     self.x = self.x + self.speed_vector.x
     self.y = self.y + self.speed_vector.y
+
 end
 
 function Object:stop()
 
-end
-
-function Object:test()
-    print('Object')
 end

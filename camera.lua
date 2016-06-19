@@ -8,23 +8,22 @@ camera.rotation = 0
 function camera:set()
     love.graphics.push()
 
+--    love.graphics.setCanvas(canvas)
+--    love.graphics.clear()
+
     love.graphics.rotate(-self.rotation)
     love.graphics.scale(1 / self.scaleX, 1 / self.scaleY)
     love.graphics.translate(-self.x, -self.y)
-
---    do
---        local oldGetX = love.mouse.getX
---        local oldGetY = love.mouse.getY
---        love.mouse.getX = function ()
---            return oldGetX() * self.scaleX + self.x
---        end
---        love.mouse.getY = function ()
---            return oldGetY() * self.scaleY + self.y
---        end
---    end
 end
 
 function camera:unset()
+--    love.graphics.setCanvas()
+--    local x = 0
+--    local y = 0
+--    local scaler = 5
+--    love.graphics.setColor(255,255,255)
+--    love.graphics.draw(canvas, x, y, 0, scaler, scaler)
+
     love.graphics.pop()
 end
 
@@ -39,13 +38,6 @@ end
 
 function camera:scale(sx, sy)
     sx = sx or 1
-
-    -- запомнить текущую точку курсора (до масштабирования)
-    -- сдвинуть текущий центр в эту точку:
-    -- узнать центр нового экрана, и разницу между этими двумя точками
-    -- TODO: перенести сюда из мэйна
-
-
     self.scaleX = self.scaleX * sx
     self.scaleY = self.scaleY * (sy or sx)
 end
@@ -63,7 +55,3 @@ end
 function camera:mousePosition()
     return love.mouse.getX() * self.scaleX + self.x, love.mouse.getY() * self.scaleY + self.y
 end
-
---function love.mouse.getX()
---    return love.mouse.getX(self) * self.scaleX + self.x
---end
