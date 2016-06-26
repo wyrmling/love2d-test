@@ -17,14 +17,14 @@ function camera:set()
 end
 
 function camera:unset()
+    love.graphics.pop()
+
 --    love.graphics.setCanvas()
 --    local x = 0
 --    local y = 0
 --    local scaler = 5
 --    love.graphics.setColor(255,255,255)
 --    love.graphics.draw(canvas, x, y, 0, scaler, scaler)
-
-    love.graphics.pop()
 end
 
 function camera:move(dx, dy)

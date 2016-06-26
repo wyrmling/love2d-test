@@ -20,6 +20,7 @@ local rotate_rate = 150
 local accel_rate = 0.5
 local group = {}
 
+local scrolled = 0
 --debug.debug()
 
 
@@ -41,7 +42,6 @@ function love.load()
 --    canvas = love.graphics.newCanvas(320, 240)
 --    canvas:setFilter('nearest', 'nearest')
 --    love.graphics.setBlendMode("alpha", "premultiplied")
---    canvas:setFilter("nearest","nearest")
 
 --    maid64.setup(320)
 
@@ -56,6 +56,22 @@ end
 
 -- dt - 1/x часть секунды, в которую происходит обработка
 function love.update(dt)
+    local oldScaleX = camera.scaleX
+    local oldScaleY = camera.scaleY
+    if scrolled > 0 then
+        camera:scale(10/15)
+    elseif scrolled < 0 then
+        camera:scale(15/10)
+    end
+    scrolled = 0
+    local newScaleX = camera.scaleX
+    local newScaleY = camera.scaleY
+    -- screen center
+    local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
+    local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
+    camera:move(width, height)
+
+
     if kb.isDown('left') then
         player_ship:addAngle(-rotate_rate * dt)
     end
@@ -63,10 +79,10 @@ function love.update(dt)
         player_ship:addAngle(rotate_rate * dt)
     end
     if kb.isDown('up') then
-        player_ship.accel_vector.magnitude = accel_rate
+        player_ship.accel = accel_rate
     end
     if kb.isDown('down') then
-        player_ship.accel_vector.magnitude = -accel_rate
+        player_ship.accel = -accel_rate
     end
 
     if kb.isDown('space') then
@@ -79,19 +95,18 @@ end
 function love.draw()
 --    maid64.start()
 
-    draw_UI()
 
     camera:set()
 
     -- camera fixed to object
     camera:move(player_ship.speed_vector.x, player_ship.speed_vector.y)
 
+    draw_planets()
+
     -- rocket draw
     rockets_draw()
 
 --debug.debug()
-
-    draw_planets()
 
     if love.mouse.isDown(1) then
         local curMouseX, curMouseY = camera:mousePosition()
@@ -107,6 +122,7 @@ function love.draw()
 
     camera:unset()
 
+    draw_UI()
 --    maid64.finish()
 end
 
@@ -127,8 +143,8 @@ function draw_UI()
     graph.print('real x: ' .. camX .. ' y: ' .. camY, 20, 80)
     graph.print('new x: ' .. 1024 * camera.scaleX / 2 .. ' y: ' .. camY, 20, 90)
     graph.print('real screen: ' .. camera.scaleX * love.graphics.getWidth() .. ' y: ' .. camera.scaleY * love.graphics.getHeight(), 20, 100)
-    graph.print('speed: L: ' .. player_ship.speed_vector.magnitude .. ' A: ' .. player_ship.speed_vector.angle, 20, 110)
-    graph.print('accel: L: ' .. player_ship.accel_vector.magnitude .. ' A: ' .. player_ship.accel_vector.angle, 20, 120)
+--    graph.print('speed: L: ' .. player_ship.speed_vector.magnitude .. ' A: ' .. player_ship.speed_vector.angle, 20, 110)
+--    graph.print('accel: L: ' .. player_ship.accel_vector.magnitude .. ' A: ' .. player_ship.accel_vector.angle, 20, 120)
     graph.print('count: ' .. #group, 20, 130)
 end
 
@@ -138,7 +154,7 @@ function draw_planets()
         local r, g, b = unpack(planet.color)
         local radius = planet.r / 500
         if distance ~= 0 then distance = distance + radius + 100 end
-        graph.setColor(r*255,g*255,b*255, 120)
+        graph.setColor(r * 255, g * 255, b * 255)
         graph.circle('fill', distance, 0, radius, 100)
         graph.print(planet.name, distance, 50, 0, 2, 2)
         distance = distance + radius + 100
@@ -152,9 +168,10 @@ function rockets_draw()
     some_rocket:draw()
     some_rocket:drawDebug()
 
-    for k, v in ipairs(group) do
-        v:draw()
-        v:drawDebug()
+    for k, ship in ipairs(group) do
+        ship:draw()
+        ship:drawDebug()
+        print('x y: ' .. ship.speed_vector.x .. ' ' .. ship.speed_vector.y .. ' angle_to_player: ' .. ship.angle_to_player)
     end
 end
 
@@ -163,13 +180,14 @@ function rockets_update(dt)
 
     some_rocket:updateObject(dt)
 
-    for k, v in ipairs(group) do
-        if (math.random() > 0.5) then
-            v:addAngle(100 * dt)
-        else
-            v:addAngle(-100 * dt)
+    for k, ship in ipairs(group) do
+        ship.angle_to_player = ship:angleTo(player_ship)
+        if (ship.angle_to_player - ship.angle > 0) then
+            ship:addAngle(5)
+        elseif (ship.angle_to_player - ship.angle < 0) then
+            ship:addAngle(-5)
         end
-        v:updateObject()
+        ship:updateObject()
     end
 end
 
@@ -216,34 +234,32 @@ end
 
 function love.keyreleased(key)
     if key == 'up' then
-        player_ship.accel_vector.magnitude = 0
+        player_ship.accel = 0
     elseif key == 'down' then
-        player_ship.accel_vector.magnitude = 0
+        player_ship.accel = 0
     end
 end
 
+-- TODO: smooth scrolling
 function love.wheelmoved(x, y)
+    -- TODO: перенести масштабирование в камеру (фактически в draw)
+--    local oldScaleX = camera.scaleX
+--    local oldScaleY = camera.scaleY
     if y > 0 then
-        local oldScaleX = camera.scaleX
-        local oldScaleY = camera.scaleY
-        camera:scale(10/15)
-        local newScaleX = camera.scaleX
-        local newScaleY = camera.scaleY
-        -- screen center
-        local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
-        local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
-        camera:move(width, height)
+        scrolled = 1
+--        camera:scale(10/15)
     elseif y < 0 then
-        local oldScaleX = camera.scaleX
-        local oldScaleY = camera.scaleY
-        camera:scale(15/10)
-        local newScaleX = camera.scaleX
-        local newScaleY = camera.scaleY
-        -- screen center
-        local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
-        local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
-        camera:move(width, height)
+        scrolled = -1
+--        camera:scale(15/10)
+    else
+        scrolled = 0
     end
+--    local newScaleX = camera.scaleX
+--    local newScaleY = camera.scaleY
+--    -- screen center
+--    local width = (love.graphics.getWidth()*oldScaleX - love.graphics.getWidth()*newScaleX)/2
+--    local height = (love.graphics.getHeight()*oldScaleY - love.graphics.getHeight()*newScaleY)/2
+--    camera:move(width, height)
 end
 
 function love.mousepressed(x, y, button, istouch)

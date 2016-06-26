@@ -2,12 +2,10 @@
 
 vector = {}
 
-function vector:new(x, y, angle, magnitude)
+function vector:new(x, y)
     local newObj = {
         x = x or 0,
         y = y or 0,
-        angle = angle or 0,
-        magnitude = magnitude or 0,
     }
     self.__index = self
     return setmetatable(newObj, self)
@@ -31,7 +29,12 @@ end
 --end
 
 function vector.__add(a, b)
-    local aX, aY = a:getVector()
-    local bX, bY = b:getVector()
-    return { aX + bX, aY + bY }
+    return vector:new(a.x+b.x, a.y+b.y)
+end
+
+function vector:angleTo(other)
+    if other then
+        return math.atan2(self.y, self.x) - math.atan2(other.y, other.x)
+    end
+    return math.atan2(self.y, self.x)
 end

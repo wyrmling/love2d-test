@@ -36,3 +36,20 @@ function Rocket:new(name, x, y, angle, speed, accel)
     obj.rand_color = true
     return obj
 end
+
+function Rocket:stop()
+end
+
+function Rocket:moveTo()
+end
+
+function Rocket:angleTo(other)
+    -- ху корабля минус ху второго корабля = нормированный вектор
+    local x = other.x - self.x
+    local y = other.y - self.y
+    local phi = math.deg(math.atan2(y, x))
+    if (phi < 0) then
+        phi = 360 + phi
+    end
+    return phi
+end
