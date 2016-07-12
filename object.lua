@@ -1,8 +1,8 @@
 -- game object
 
-require('vector')
-require('class')
-Object = class()
+require 'vector'
+local class = require 'middleclass'
+Object = class('Object')
 
 --[[
     rotate_angle
@@ -16,22 +16,18 @@ Object = class()
     accel:x,y (вычисление, отладка)
 --]]
 
-function Object:new(name, x, y, angle, speed, accel)
-    local params = {
-        name = name or 'object',
-        x = x or 0,
-        y = y or 0,
-        angle = angle or 0,
-        speed_vector = vector:new(),
-        accel_vector = vector:new(),
-        speed = speed or 0,
-        accel = accel or 0,
-    }
-    params.rand_r = love.math.random() * 255
-    params.rand_g = love.math.random() * 255
-    params.rand_b = love.math.random() * 255
-
-    return object(self, params)
+function Object:initialize(name, x, y, angle, speed, accel)
+    self.name = name or 'object'
+    self.x = x or 0
+    self.y = y or 0
+    self.angle = angle or 0
+    self.speed_vector = vector:new()
+    self.accel_vector = vector:new()
+    self.speed = speed or 0
+    self.accel = accel or 0
+    self.rand_r = love.math.random() * 255
+    self.rand_g = love.math.random() * 255
+    self.rand_b = love.math.random() * 255
 end
 
 --function vector:setSpeed(speed)
@@ -88,6 +84,7 @@ function Object:drawDebug()
     love.graphics.print(self.name, self.x, self.y + 10, 0, 2, 2)
     love.graphics.print('spd: ' .. self.speed, self.x, self.y + 30, 0, 2, 2)
     love.graphics.print('angle: ' .. math.floor(self.angle), self.x, self.y + 50, 0, 2, 2)
+    love.graphics.print('fuel: ' .. self.fuel, self.x, self.y + 70, 0, 2, 2)
 end
 
 function Object:draw()
@@ -107,15 +104,32 @@ function Object:draw()
 end
 
 function Object:updateObject(dt)
-    -- ускорение: пересчет вектора скорости
-    self.accel_vector.x = math.cos(math.rad(self.angle)) * self.accel
-    self.accel_vector.y = math.sin(math.rad(self.angle)) * self.accel
+    -- TODO:
+    -- 1. принятие решение AI
+    -- 2. расчет и обновление параметров объекта
 
-    -- speed
-    self.speed_vector = self.speed_vector + self.accel_vector
-    self.speed = math.sqrt(self.speed_vector.x * self.speed_vector.x + self.speed_vector.y * self.speed_vector.y)
+    if self.fuel > 0 then
+        local sq_accel = self.accel_vector.x ^ 2 + self.accel_vector.y ^ 2
+        self.fuel = self.fuel - sq_accel * self.fuel_rate
+        self:updateAccel(dt)
+    end
+
+
+    self:updateSpeed(dt)
 
     -- положение, с учетом вектора скорости
     self.x = self.x + self.speed_vector.x
     self.y = self.y + self.speed_vector.y
+end
+
+function Object:updateAccel(dt)
+    -- ускорение: пересчет вектора скорости
+    self.accel_vector.x = math.cos(math.rad(self.angle)) * self.accel
+    self.accel_vector.y = math.sin(math.rad(self.angle)) * self.accel
+end
+
+function Object:updateSpeed(dt)
+    -- speed
+    self.speed_vector = self.speed_vector + self.accel_vector
+    self.speed = math.sqrt(self.speed_vector.x ^ 2 + self.speed_vector.y ^ 2)
 end

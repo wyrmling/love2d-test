@@ -50,6 +50,7 @@ function love.load()
     kb.setKeyRepeat(true)
     camera:move(1100, -185)
     player_ship = Rocket:new('ship', rocket_default.x, rocket_default.y)
+    player_ship.fuel = 100
     player_ship.rand_color = false
     some_rocket = Rocket:new('some rocket', rocket_default.x, rocket_default.y, 0, 0, 0.01)
 end
@@ -171,7 +172,7 @@ function rockets_draw()
     for k, ship in ipairs(group) do
         ship:draw()
         ship:drawDebug()
-        print('x y: ' .. ship.speed_vector.x .. ' ' .. ship.speed_vector.y .. ' angle_to_player: ' .. ship.angle_to_player)
+--        print('x y: ' .. ship.speed_vector.x .. ' ' .. ship.speed_vector.y .. ' angle_to_player: ' .. ship.angle_to_player)
     end
 end
 
@@ -181,19 +182,24 @@ function rockets_update(dt)
     some_rocket:updateObject(dt)
 
     for k, ship in ipairs(group) do
+        -- TODO: добавить проверку поворота по кратчайшему пути
+        -- TODO: player: 10 gr, other: 20 gr
         ship.angle_to_player = ship:angleTo(player_ship)
-        if (ship.angle_to_player - ship.angle > 0) then
-            ship:addAngle(5)
-        elseif (ship.angle_to_player - ship.angle < 0) then
-            ship:addAngle(-5)
-        end
+        local diff = ship.angle_to_player - ship.angle
+        local rocket_rotate_rate = 1
+        if math.abs(diff) < 5 then rocket_rotate_rate = diff end
+        --        if (diff > 0) then
+        ship:addAngle(rocket_rotate_rate)
+        --        elseif (diff < 0) then
+        --            ship:addAngle(-rocket_rotate_rate)
+        --        end
         ship:updateObject()
     end
 end
 
 -- работает не плавно, kb.isDown из update работает плавнее
 function love.keypressed(key, scancode, isrepeat)
-    print(key, scancode, isrepeat)
+--    print(key, scancode, isrepeat)
     if key == 'w' then
         local oldScaleX = camera.scaleX
         local oldScaleY = camera.scaleY
@@ -222,7 +228,8 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == '1' then
         local angle = 360 * math.random()
-        local r = Rocket:new('rocket' .. math.random(), rocket_default.x, rocket_default.y, angle, 0, 0.01)
+        local r = Rocket:new('rocket' .. math.random(), rocket_default.x, rocket_default.y, angle, 0, 0.11)
+        r.fuel = 10
         r:addAngle(angle)
         table.insert(group, r)
     end
@@ -263,7 +270,7 @@ function love.wheelmoved(x, y)
 end
 
 function love.mousepressed(x, y, button, istouch)
-    print(camera:mousePosition())
+--    print(camera:mousePosition())
     mouse.pressed.x, mouse.pressed.y = camera:mousePosition()
     graph.print('x: ' .. x, 20, 70)
 end
